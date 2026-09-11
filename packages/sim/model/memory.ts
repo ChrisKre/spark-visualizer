@@ -1,6 +1,7 @@
-// SAS-014 (this file, spill/GC stubbed) → SAS-018 (spill/GC replaced with the real model).
+// SAS-014 (executionCeilingPerTask/storageFloorBytes) + SAS-018 (estimateSpill/computeGcMs).
 // See docs/SIMULATOR_SPEC.md §2 Step 4 ("Spill", "GC").
 
+import * as K from '../calibration/constants.generated';
 import type { Bytes, RunConfig, SimMs } from '../types';
 import { asBytes, asSimMs } from '../types';
 
@@ -27,6 +28,22 @@ export function storageFloorBytes(config: RunConfig): Bytes {
   return asBytes(Math.max(0, unifiedMiB * config.cluster.storageFraction) * BYTES_PER_MIB);
 }
 
+/**
+ * How much of `requestedLiveStorageMiB` survives, given `executionDemandMiB` competing for the
+ * same unified region. Execution may push storage down to the floor (`storageFloorBytes`) but
+ * never further — storage can never take that floor away from execution, no matter how large
+ * `requestedLiveStorageMiB` is. This is the M4 asymmetry; see docs/SIMULATOR_SPEC.md §2 Step 4.
+ * (v1.0 has no caching module yet, so callers always pass `requestedLiveStorageMiB = 0` — this
+ * function exists so the asymmetry itself is directly testable regardless.)
+ */
+export function evictStorage(config: RunConfig, requestedLiveStorageMiB: number, executionDemandMiB: number): number {
+  const usableMiB = config.cluster.executorMemoryMiB - RESERVED_MEMORY_MIB;
+  const unifiedMiB = usableMiB * config.cluster.memoryFraction;
+  const floorMiB = unifiedMiB * config.cluster.storageFraction;
+  const availableForStorage = Math.max(floorMiB, unifiedMiB - executionDemandMiB);
+  return Math.max(0, Math.min(requestedLiveStorageMiB, availableForStorage));
+}
+
 export interface SpillResult {
   memorySpilledBytes: Bytes;
   diskSpilledBytes: Bytes;
@@ -35,23 +52,43 @@ export interface SpillResult {
 }
 
 /**
- * PLACEHOLDER (SAS-014): always reports zero spill and `'ok'`. Replaced with the real spill
- * model in SAS-018. Deliberately zero, not a plausible-looking nonzero number, so the stub is
- * unmistakable in review and in the SAS-018 diff.
+ * SAS-018. `peakExecutionMemoryBytes <= ceilingBytes` spills nothing. Past that, the task
+ * spills to disk (`serializationRatio` of the overflow) and pays a penalty for writing +
+ * reading the spill plus a merge cost. Past `OOM_THRESHOLD_RATIO` × ceiling (post-spill), the
+ * task genuinely fails — an unclamped, honest `'oom'` status, not a plausible-looking number.
  */
-export function estimateSpill(_peakExecutionMemoryBytes: Bytes, _ceilingBytes: Bytes): SpillResult {
+export function estimateSpill(peakExecutionMemoryBytes: Bytes, ceilingBytes: Bytes): SpillResult {
+  if (peakExecutionMemoryBytes <= ceilingBytes) {
+    return { memorySpilledBytes: asBytes(0), diskSpilledBytes: asBytes(0), spillPenaltyMs: asSimMs(0), status: 'ok' };
+  }
+
+  const spillBytes = peakExecutionMemoryBytes - ceilingBytes;
+  const diskSpilledBytes = spillBytes * K.SERIALIZATION_RATIO;
+
+  // How many extra merge passes the spilled runs need — proportional to how many times over
+  // the ceiling the spill is. A documented simplification: the spec names `spillMergePasses`
+  // without a formula for it.
+  const spillMergePasses = ceilingBytes > 0 ? Math.max(1, Math.ceil(spillBytes / ceilingBytes)) : 1;
+
+  const spillPenaltyMs =
+    (spillBytes / BYTES_PER_MIB / K.SPILL_WRITE_THROUGHPUT_MBPS) * 1000 +
+    (spillBytes / BYTES_PER_MIB / K.SPILL_READ_THROUGHPUT_MBPS) * 1000 +
+    spillMergePasses * K.SPILL_MERGE_COST_MS;
+
+  const postSpillPeak = ceilingBytes + diskSpilledBytes;
+  const oomThresholdBytes = ceilingBytes * K.OOM_THRESHOLD_RATIO;
+  const status: SpillResult['status'] = postSpillPeak > oomThresholdBytes ? 'oom' : 'spilled';
+
   return {
-    memorySpilledBytes: asBytes(0),
-    diskSpilledBytes: asBytes(0),
-    spillPenaltyMs: asSimMs(0),
-    status: 'ok',
+    memorySpilledBytes: asBytes(spillBytes),
+    diskSpilledBytes: asBytes(diskSpilledBytes),
+    spillPenaltyMs: asSimMs(spillPenaltyMs),
+    status,
   };
 }
 
-/**
- * PLACEHOLDER (SAS-014): always reports zero GC time. Replaced with the real GC model in
- * SAS-018.
- */
-export function computeGcMs(_heapPressure: number): SimMs {
-  return asSimMs(0);
+/** `gcMs = heapPressure^2 * gcBaseMs`, `heapPressure` clamped to 1.4 by the caller. */
+export function computeGcMs(heapPressure: number): SimMs {
+  const clamped = Math.min(heapPressure, 1.4);
+  return asSimMs(clamped * clamped * K.GC_BASE_MS);
 }
