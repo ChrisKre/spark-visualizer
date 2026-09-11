@@ -7,7 +7,7 @@ then fix it and watch wall clock collapse.
 A blog post tells you the p99 partition is the problem. This hands over the controls that
 produced it.
 
-**Live:** _(set after first deploy)_ · **Status:** pre-MVP, see [BACKLOG.md](./BACKLOG.md)
+**Live:** [spark-visualizer-web-nine.vercel.app](https://spark-visualizer-web-nine.vercel.app/) · **Status:** pre-MVP, see [BACKLOG.md](./BACKLOG.md)
 
 ---
 
