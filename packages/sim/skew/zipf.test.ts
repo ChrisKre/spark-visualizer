@@ -12,11 +12,11 @@ describe('zipf', () => {
     const N = 50;
     const samples = sampleZipfKeys(rng, N, 0, 100_000);
     const counts = new Array<number>(N + 1).fill(0);
-    for (const k of samples) counts[k] += 1;
+    for (const k of samples) counts[k] = (counts[k] ?? 0) + 1;
     const expected = samples.length / N;
     for (let k = 1; k <= N; k++) {
-      expect(counts[k]).toBeGreaterThan(expected * 0.85);
-      expect(counts[k]).toBeLessThan(expected * 1.15);
+      expect(counts[k] ?? 0).toBeGreaterThan(expected * 0.85);
+      expect(counts[k] ?? 0).toBeLessThan(expected * 1.15);
     }
   });
 
