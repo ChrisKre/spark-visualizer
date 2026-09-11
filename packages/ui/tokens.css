@@ -1,0 +1,94 @@
+/*
+ * Design tokens — see docs/DESIGN_SYSTEM.md §1.
+ *
+ * Three theme states must all render correctly: explicit light, explicit dark, and
+ * unstamped system default. The rule that makes this work: every token is defined once in
+ * the bare `:root` block below (the light palette), and every override block ONLY
+ * redefines tokens that already exist there. A token whose only definition sits inside a
+ * media or [data-theme] block is a bug — it renders one theme's text on the other theme's
+ * ground.
+ *
+ * Hex values below are a placeholder brand pass — structure and theming mechanics are what
+ * SAS-003 is graded on. Swap values, not structure, when the real palette lands.
+ *
+ * `data-theme="light" | "dark"` is set on <html> by the pre-hydration script in
+ * apps/web/app/layout.tsx. No attribute present = unstamped system default, driven purely
+ * by `prefers-color-scheme`.
+ */
+
+:root {
+  /* Ground */
+  --ground: #f7f5f2;
+  --surface: #ffffff;
+  --surface-2: #efece6;
+
+  /* Text */
+  --ink: #1a1816;
+  --body: #3a3632;
+  --muted: #6b6560;
+
+  /* Rules */
+  --rule: #ddd8d1;
+  --rule-soft: #ece8e2;
+
+  /* Accent (ember) — decorative only; never reused for chart semantics */
+  --accent: #c4501e;
+  --accent-soft: #f0d9cb;
+
+  /* Semantic — owned by spill / straggler / OOM states; never used decoratively */
+  --ok: #1f7a6c;
+  --ok-soft: #d3ece7;
+  --warn: #c78a1e;
+  --warn-soft: #f2e3c2;
+  --crit: #b3261e;
+  --crit-soft: #f4d6d3;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --ground: #171512;
+    --surface: #201d19;
+    --surface-2: #2a2621;
+
+    --ink: #f2efe9;
+    --body: #d8d3cb;
+    --muted: #93897e;
+
+    --rule: #3a3530;
+    --rule-soft: #2a2621;
+
+    --accent: #e2703a;
+    --accent-soft: #4a2c1c;
+
+    --ok: #4fb3a0;
+    --ok-soft: #16332c;
+    --warn: #d9a53f;
+    --warn-soft: #3a2d12;
+    --crit: #e2685f;
+    --crit-soft: #3a1e1b;
+  }
+}
+
+/* Explicit dark toggle always wins over prefers-color-scheme. */
+:root[data-theme='dark'] {
+  --ground: #171512;
+  --surface: #201d19;
+  --surface-2: #2a2621;
+
+  --ink: #f2efe9;
+  --body: #d8d3cb;
+  --muted: #93897e;
+
+  --rule: #3a3530;
+  --rule-soft: #2a2621;
+
+  --accent: #e2703a;
+  --accent-soft: #4a2c1c;
+
+  --ok: #4fb3a0;
+  --ok-soft: #16332c;
+  --warn: #d9a53f;
+  --warn-soft: #3a2d12;
+  --crit: #e2685f;
+  --crit-soft: #3a1e1b;
+}
