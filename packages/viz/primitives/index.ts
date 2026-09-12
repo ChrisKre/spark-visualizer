@@ -7,3 +7,7 @@ export { Axis } from './Axis';
 export type { AxisProps } from './Axis';
 export { Badge } from './Badge';
 export type { BadgeProps, Provenance } from './Badge';
+export { DEFAULT_METRICS } from './metricDefs';
+export type { MetricDef, MetricKey } from './metricDefs';
+export { MetricRibbon } from './MetricRibbon';
+export type { MetricRibbonProps, MetricRibbonSingleProps, MetricRibbonCompareProps, MetricValues } from './MetricRibbon';
