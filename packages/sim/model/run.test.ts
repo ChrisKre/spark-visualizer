@@ -53,6 +53,11 @@ describe('runQuery', () => {
     }
   });
 
+  it('AQE runs fine for a non-join query (no "other" side to measure)', () => {
+    const cfg = config({ query: { kind: 'aggregate' }, sql: { adaptive: { enabled: true } } });
+    expect(() => runQuery(cfg, 1, applyAqeRewrites)).not.toThrow();
+  });
+
   it('wall clock is not the sum of task durations when there are more slots than 1', () => {
     // Plenty of parallel slots relative to partitions -> tasks run mostly concurrently, so
     // stage wall clock must be far less than the sum of individual task durations.

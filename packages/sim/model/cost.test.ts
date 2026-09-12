@@ -46,6 +46,13 @@ describe('computeTaskCost', () => {
     expect(large.baseMs).toBeGreaterThan(small.baseMs);
   });
 
+  it('still returns a valid cost when executorMemoryMiB is too small to leave any ceiling', () => {
+    const starvedConfig = { ...DEFAULT_RUN_CONFIG, cluster: { ...DEFAULT_RUN_CONFIG.cluster, executorMemoryMiB: 100 } };
+    const cost = computeTaskCost(scanNode, partition, starvedConfig, 'map');
+    expect(Number.isFinite(cost.baseMs)).toBe(true);
+    expect(cost.status).not.toBe('ok');
+  });
+
   it('an empty partition still returns a valid, non-negative cost', () => {
     const cost = computeTaskCost(scanNode, { rows: 0, bytes: asBytes(0) }, DEFAULT_RUN_CONFIG, 'map');
     expect(cost.baseMs).toBeGreaterThanOrEqual(0);

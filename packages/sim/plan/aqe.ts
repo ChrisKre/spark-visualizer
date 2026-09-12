@@ -120,8 +120,13 @@ export function coalesceShufflePartitions(
 
   if (meanBytes >= advisoryBytes) return { plan };
 
-  const newCount = Math.max(1, Math.min(bytes.length - 1, Math.round(totalBytes / advisoryBytes) || 1));
-  if (newCount >= bytes.length) return { plan };
+  // Build on the exchange's CURRENT partition count, not `bytes.length` — if optimizeSkewedJoin
+  // already ran (fixed order: skew split before coalesce), `exchange` is the skew-adjusted node
+  // and its partitionCount reflects that; using `bytes.length` here would silently clobber the
+  // skew split's effect instead of composing with it.
+  const currentCount = exchange.partitionCount ?? bytes.length;
+  const newCount = Math.max(1, Math.min(currentCount - 1, Math.round(totalBytes / advisoryBytes) || 1));
+  if (newCount >= currentCount) return { plan };
 
   const before = exchange;
   const after: PlanNode = { ...exchange, partitionCount: newCount };

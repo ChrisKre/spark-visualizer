@@ -99,6 +99,13 @@ describe('buildPlan', () => {
     expect(plan.kind).not.toBe('BroadcastHashJoin');
   });
 
+  it('builds Scan -> Exchange -> Project for the reserved window kind', () => {
+    const cfg = config({ query: { kind: 'window', partitionByKeyCardinality: 10 } });
+    const plan = buildPlan(cfg.query, cfg);
+    expect(plan.kind).toBe('Project');
+    expect(plan.children[0]?.kind).toBe('Exchange');
+  });
+
   it('is deterministic: the same (query, config) always produces the same node ids', () => {
     const cfg = config({ query: { kind: 'aggregate' } });
     const a = buildPlan(cfg.query, cfg);

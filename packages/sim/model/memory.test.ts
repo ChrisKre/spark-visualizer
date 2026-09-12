@@ -85,6 +85,12 @@ describe('estimateSpill', () => {
     expect(result.status).toBe('spilled');
   });
 
+  it('still returns a valid spill penalty when the ceiling itself is zero', () => {
+    const result = estimateSpill(asBytes(1000), asBytes(0));
+    expect(result.status).not.toBe('ok');
+    expect(Number.isFinite(result.spillPenaltyMs)).toBe(true);
+  });
+
   it('marks the task oom (a genuine, unclamped value) once spill exceeds the OOM threshold', () => {
     const ceiling = asBytes(1000);
     const result = estimateSpill(asBytes(1000 * 1_000_000), ceiling); // wildly over ceiling

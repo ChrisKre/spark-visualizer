@@ -66,6 +66,23 @@ describe('rollupMetrics', () => {
     const metrics = rollupMetrics([stage()], tasks);
     expect(metrics.idleReducers).toBe(1);
   });
+
+  it('handles an empty run (no stages, no tasks) without dividing by zero', () => {
+    const metrics = rollupMetrics([], []);
+    expect(metrics.wallClockMs).toBe(0);
+    expect(metrics.stragglerRatio).toBe(0);
+    expect(Number.isFinite(metrics.gcPercent)).toBe(true);
+  });
+
+  it('median uses the average of the two middle values for an even-length task list', () => {
+    const tasks = [
+      task({ taskId: 0, launchMs: asSimMs(0), finishMs: asSimMs(100) }),
+      task({ taskId: 1, launchMs: asSimMs(0), finishMs: asSimMs(200) }),
+    ];
+    const metrics = rollupMetrics([stage()], tasks);
+    // median(100, 200) = 150; stragglerRatio = max(200) / median(150).
+    expect(metrics.stragglerRatio).toBeCloseTo(200 / 150, 6);
+  });
 });
 
 describe('collectWarnings', () => {
@@ -79,6 +96,26 @@ describe('collectWarnings', () => {
     const metrics = rollupMetrics([stage()], tasks);
     const warnings = collectWarnings([stage()], metrics);
     expect(warnings.some((w) => w.code === 'idle-reducers')).toBe(true);
+  });
+
+  it('emits an excessive-gc warning when GC exceeds 10% of task time', () => {
+    const tasks = [task({ launchMs: asSimMs(0), finishMs: asSimMs(100), gcMs: asSimMs(50) })];
+    const metrics = rollupMetrics([stage()], tasks);
+    const warnings = collectWarnings([stage()], metrics);
+    expect(warnings.some((w) => w.code === 'excessive-gc')).toBe(true);
+  });
+
+  it('emits a high-spill warning when disk-spilled bytes exceed 20% of shuffle-write bytes', () => {
+    const tasks = [task({ shuffleWriteBytes: asBytes(1000), diskSpilledBytes: asBytes(500) })];
+    const metrics = rollupMetrics([stage()], tasks);
+    const warnings = collectWarnings([stage()], metrics);
+    expect(warnings.some((w) => w.code === 'high-spill')).toBe(true);
+  });
+
+  it('does not divide by zero when there is no shuffle-write at all', () => {
+    const tasks = [task({ shuffleWriteBytes: asBytes(0), diskSpilledBytes: asBytes(0) })];
+    const metrics = rollupMetrics([stage()], tasks);
+    expect(() => collectWarnings([stage()], metrics)).not.toThrow();
   });
 
   it('emits no warnings for a healthy run', () => {

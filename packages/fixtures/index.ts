@@ -3,6 +3,7 @@
 // dependency rule, which constrains packages/sim, packages/viz and apps/web but says
 // nothing about packages/fixtures. Documented as intentional in .dependency-cruiser.cjs.
 // Real schema + loader land in SAS-022 (E3).
-import { SIM_PACKAGE_READY } from '@sas/sim';
+import { DEFAULT_RUN_CONFIG } from '@sas/sim';
 
-export const FIXTURES_PACKAGE_READY = SIM_PACKAGE_READY;
+// Proves the workspace boundary against @sas/sim's real E2 API, not a scaffold sentinel.
+export const FIXTURES_PACKAGE_READY = typeof DEFAULT_RUN_CONFIG === 'object';
