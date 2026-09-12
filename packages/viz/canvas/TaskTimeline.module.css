@@ -1,0 +1,43 @@
+.container {
+  position: relative;
+  width: 100%;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+}
+
+.tooltip {
+  position: absolute;
+  transform: translate(0.75rem, 0.75rem);
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 0.5rem 0.625rem;
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  color: var(--body);
+  pointer-events: none;
+  transition: opacity 100ms ease;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 15%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tooltip {
+    transition: none;
+  }
+}
+
+/* Visually hidden but present for screen readers — the keyboard/AT equivalent of the canvas. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
