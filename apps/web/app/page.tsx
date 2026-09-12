@@ -1,6 +1,6 @@
 import { DEFAULT_RUN_CONFIG, asBytes, asMiB } from '@sas/sim';
 import { loadFixture } from '@sas/fixtures';
-import { VIZ_PACKAGE_READY } from '@sas/viz';
+import { ChartFrame } from '@sas/viz';
 import { UI_PACKAGE_READY } from '@sas/ui';
 
 // Proves the workspace graph from ARCHITECTURE.md §2 is real, not just apps/web building
@@ -8,7 +8,9 @@ import { UI_PACKAGE_READY } from '@sas/ui';
 // lands in SAS-075.
 const packagesReady = [
   ['@sas/sim', typeof DEFAULT_RUN_CONFIG === 'object'],
-  ['@sas/viz', VIZ_PACKAGE_READY],
+  // @sas/viz's real chart primitives landed in E5 — proves the boundary against its actual
+  // API now, not a scaffold sentinel.
+  ['@sas/viz', typeof ChartFrame === 'function'],
   ['@sas/ui', UI_PACKAGE_READY],
   // @sas/fixtures's real loader landed in SAS-022 (E3) — proves the boundary against its
   // actual API now, not a scaffold sentinel.

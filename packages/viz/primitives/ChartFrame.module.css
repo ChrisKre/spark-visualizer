@@ -1,0 +1,8 @@
+.scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.scroll svg {
+  display: block;
+}
