@@ -59,8 +59,16 @@ def skewed_keys(spark, n_rows, alpha, n_keys, null_frac, seed=42):
 
 ```ts
 // tools/generator/skew.ts — must produce the same histogram for the same seed
-export function skewedKeys(opts: SkewOpts): Int32Array { /* mulberry32 + inverse transform */ }
+export function skewedKeys(opts: SkewOpts): SkewHistogram { /* mulberry32 + inverse transform */ }
 ```
+
+As shipped, `SkewHistogram` is `{ counts: Map<string, number>; rows: number }` rather than the
+bare `Int32Array` sketched above — a `Map` keyed by label represents the null bucket (`__null__`)
+and salted sub-keys (`42_0`, `42_1`, ...) directly, which a plain index-keyed array can't. Both
+implementations deep-import `packages/sim/skew/{prng,zipf,hash,partition}.ts`'s exact algorithm
+(TS directly; PySpark via a bit-for-bit `mulberry32` port) rather than reimplementing it, so "same
+seed" means the literal same uniform sequence on both sides — see `tools/generator/skew.ts`'s and
+`skew.py`'s module comments.
 
 **Parity test (CI):** both implementations, same seed and parameters, must produce key-frequency
 histograms whose per-bucket counts agree within 0.5 %. This test is the reason the fixtures and
@@ -77,7 +85,7 @@ the sliders describe the same world.
 ## 4. Slim Parquet build
 
 ```bash
-python tools/data/build_slim.py --months 2019-01..2019-06 --out public/data/
+python tools/data/build_slim.py --months 2019-01..2019-06 --out apps/web/public/data/
 ```
 
 Produces:

@@ -1,0 +1,9 @@
+# tools/data — pure Python, deliberately not a pnpm workspace member (mirrors tools/capture's own
+# "pure Python" README note).
+#
+# A single-machine columnar batch transform over already-Parquet monthly files, not a distributed
+# shuffle — pandas/pyarrow avoids the JVM/Docker setup tools/capture/requirements.txt documents
+# for pyspark, which doesn't buy anything here (see tools/data/build_slim.py's module docstring).
+pandas>=2.2
+pyarrow>=16
+scipy>=1.13

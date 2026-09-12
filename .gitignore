@@ -9,6 +9,10 @@ out/
 /data/*.parquet
 !/data/slim/*.parquet
 /fixtures/_raw/
+# SAS-033 — raw NYC TLC downloads (tools/data/build_slim.py's --raw-dir default). Never commit
+# raw third-party data (docs/DATA_PIPELINE.md §6); only the derived apps/web/public/data/*.parquet
+# artifacts are committed.
+/tools/data/_raw/
 coverage/
 .turbo/
 .vercel/

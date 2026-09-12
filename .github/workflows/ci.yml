@@ -60,6 +60,23 @@ jobs:
       - run: pnpm build | tee /tmp/build-output.txt
       - run: node tools/check-bundle-budget.mjs < /tmp/build-output.txt
 
+  generator-parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pnpm test -- tools/generator/parity.test.ts
+        # No Java/pyspark/Docker needed: tools/generator/skew.py's histogram path (module
+        # docstring) never imports pyspark — SAS-032's parity check is pure Python + the TS side.
+
   e2e:
     runs-on: ubuntu-latest
     needs: [typecheck]
