@@ -13,7 +13,7 @@
     "test:watch": "vitest",
     "typecheck": "pnpm -r exec tsc --noEmit",
     "depcruise": "depcruise --config .dependency-cruiser.cjs apps packages tools",
-    "lint": "eslint . && node tools/lint-no-raw-hex.mjs && node tools/check-sim-zero-deps.mjs && pnpm depcruise",
+    "lint": "eslint . && node tools/lint-no-raw-hex.mjs && node tools/check-sim-zero-deps.mjs && node tools/check-constants-header.mjs && pnpm depcruise",
     "bundle-budget": "pnpm build | node tools/check-bundle-budget.mjs",
     "e2e": "playwright test"
   },
