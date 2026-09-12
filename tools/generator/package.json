@@ -1,0 +1,12 @@
+{
+  "name": "@sas/generator",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./skew.ts",
+  "types": "./skew.ts",
+  "dependencies": {
+    "@sas/sim": "workspace:*"
+  },
+  "devDependencies": {}
+}

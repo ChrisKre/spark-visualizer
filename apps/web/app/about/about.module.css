@@ -1,0 +1,40 @@
+/* SAS-034 — dataset attribution. Section 2's "three-layer model + honesty statement" (SAS-083)
+   extends this same page later; keep new sections inside .section so the pattern holds. */
+
+.main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  color: var(--body);
+}
+
+.main h1 {
+  color: var(--ink);
+}
+
+.section {
+  border-top: 1px solid var(--rule);
+  padding-top: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.section h2 {
+  color: var(--ink);
+  font-size: 1.1rem;
+}
+
+.section p {
+  line-height: 1.6;
+}
+
+.disclaimer {
+  color: var(--muted);
+}
+
+.main a {
+  /* --accent fails WCAG AA contrast (4.27:1) for text on --ground — it's documented as
+     decorative-only (packages/ui/tokens.css). Inherit body/muted's already-accessible color and
+     rely on the underline to mark links. */
+  color: inherit;
+  text-decoration: underline;
+}

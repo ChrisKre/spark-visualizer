@@ -3,7 +3,16 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'node',
-    include: ['packages/**/*.test.ts', 'packages/**/*.test.tsx', 'apps/**/*.test.ts', 'apps/**/*.test.tsx'],
+    // tools/**/*.test.ts covers tools/generator's skew.test.ts and SAS-032's parity.test.ts
+    // (E4) — coverage.include below stays scoped to packages/sim; tools/generator isn't held
+    // to that 90% product gate.
+    include: [
+      'packages/**/*.test.ts',
+      'packages/**/*.test.tsx',
+      'apps/**/*.test.ts',
+      'apps/**/*.test.tsx',
+      'tools/**/*.test.ts',
+    ],
     exclude: ['**/node_modules/**', '**/dist/**', '**/.next/**', '**/out/**'],
     coverage: {
       provider: 'v8',

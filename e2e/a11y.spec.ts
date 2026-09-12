@@ -1,8 +1,8 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
-// Grows with E6/E8 as /m/[moduleId] routes land; only "/" exists at E1 time.
-const ROUTES = ['/'];
+// Grows with E6/E8 as /m/[moduleId] routes land. "/about" added in SAS-034 (E4).
+const ROUTES = ['/', '/about'];
 
 for (const route of ROUTES) {
   test(`a11y: ${route} has no serious or critical violations`, async ({ page }) => {
