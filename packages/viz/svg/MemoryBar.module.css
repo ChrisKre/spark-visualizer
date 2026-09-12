@@ -1,0 +1,60 @@
+.track {
+  fill: var(--surface-2);
+}
+
+.executionCapacity {
+  fill: var(--surface-2);
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+
+.storageCapacity {
+  fill: var(--surface);
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+
+.executionUsed {
+  fill: var(--accent);
+}
+
+.executionOom {
+  fill: var(--crit);
+}
+
+.storageUsed {
+  fill: var(--ok);
+}
+
+.oomLabel {
+  fill: var(--surface);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.legend {
+  fill: var(--body);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+}
+
+.spillBar {
+  stroke: var(--warn);
+  stroke-width: 1;
+}
+
+.spillPatternBg {
+  fill: var(--warn-soft);
+}
+
+.spillPatternLine {
+  stroke: var(--warn);
+  stroke-width: 2;
+}
+
+.spillLabel {
+  fill: var(--warn);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+}
