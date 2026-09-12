@@ -113,6 +113,29 @@ Plan-level numbers live in the same log, elsewhere:
 `packages/fixtures/schema.ts` validates every fixture at build time with Zod. A fixture that
 fails validation fails CI.
 
+**Schema extensions beyond the sketch above** (SAS-022):
+
+- `runConfig` — the literal `RunConfig` used to produce the run, alongside the smaller
+  display-only `config` block shown above. `calibrate.py` and the calibration MAE gate need the
+  full config (memory fractions, row counts, query shape) to reconstruct costs, not just the 4
+  display fields.
+- `synthetic` — `true` for a fixture produced by `packages/fixtures/scripts/generate-synthetic.ts`
+  rather than captured from a real cluster. Defaults to `false`. `packages/fixtures/resolve.ts`'s
+  snapping index excludes every fixture with `synthetic: true`, so a synthetic fixture can never
+  make the UI show `MEASURED` — enforced in code, not just by convention.
+- Each task also carries `rows: number` — a fixtures-schema-only field (not part of `TaskResult`)
+  that `calibrate.py`'s per-task regression needs for the `computeMs`/`sortMs` terms.
+  `packages/fixtures/loader.ts` strips it when building a `RunResult`.
+- `plan` matches `RunResult['plan']` exactly (`{ initial: PlanNode, final: PlanNode, rewrites:
+  AqeRewrite[] }`), not a single free-form tree — a fixture must be able to fully substitute for a
+  measured `RunResult`.
+
+**Until a real capture session lands** (see the sequencing note in
+[BACKLOG.md](../BACKLOG.md#e3--fixture--calibration-pipeline)), every fixture committed under
+`packages/fixtures/data/` is synthetic: generated from `packages/sim`'s own `simulate()` plus
+injected per-task jitter, not a real Spark capture. Regenerate them with
+`pnpm --filter @sas/fixtures run generate:synthetic`.
+
 ## 5. Coverage requirement
 
 Per module, capture **5–8 runs spanning the parameter range**, not just the two endpoints. The

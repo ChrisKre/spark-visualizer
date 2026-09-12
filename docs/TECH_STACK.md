@@ -18,6 +18,8 @@ Every dependency here is justified. If you want to add one, open an ADR.
 | Package manager | pnpm workspaces | 9.x | Workspace boundaries that CI can enforce. |
 | Host | Vercel (Cloudflare Pages equivalent) | — | Static output, preview deploys per PR. |
 | Capture side | PySpark 3.5 on DBR 14.3 LTS | — | Fixture generation only, run manually. Not part of CI. |
+| Fixture validation | Zod | 4.x | Already named by docs/FIXTURES.md §4 as the fixture-schema validator; a fixture failing validation must fail CI. Scoped to `packages/fixtures` only — `packages/sim` stays dependency-free. |
+| Fixture dev tooling | `tsx` | 4.x | Runs `packages/fixtures/scripts/generate-synthetic.ts` (SAS-023/024), which needs `simulate()` from real TypeScript, not a separate reimplementation. Dev-only, never shipped in the app bundle. |
 
 ## Rejected, and why
 

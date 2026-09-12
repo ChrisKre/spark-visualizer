@@ -345,10 +345,12 @@ and every other knob matches exactly.
 
 **Where this lives.** `resolveRun` is not part of `packages/sim` — `packages/sim` may not depend
 on `packages/fixtures` (see `.dependency-cruiser.cjs`, rule `sim-zero-workspace-deps`). It lives in
-`packages/fixtures` (which is allowed to depend on `@sas/sim` for the `RunResult` type) or in
-`apps/web/store`, and wraps `simulate()`. `simulate()` itself always returns
+`packages/fixtures/resolve.ts` (which is allowed to depend on `@sas/sim` for `simulate()` and the
+`RunResult` type — SAS-022), and wraps `simulate()`. `simulate()` itself always returns
 `provenance: 'modeled'` and `fixtureId: undefined`; only the wrapper may override those two
-fields, and only when it substitutes a genuine fixture.
+fields, and only when it substitutes a genuine fixture. Its snapping index only ever contains
+fixtures with `synthetic !== true` (see [FIXTURES.md](./FIXTURES.md) §4) — a synthetic fixture can
+never make the UI show `MEASURED`.
 
 ## 4. Calibration
 

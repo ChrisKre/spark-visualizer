@@ -1,0 +1,11 @@
+# tools/capture — pure Python, deliberately not a pnpm workspace member (see README.md).
+#
+# pyspark is only needed for 00_configure.py / m1_skew.py / m2_aqe.py / 10_reduce.py's CLI half —
+# none of which run in this pass (no reachable cluster). pyspark 3.5.x targets Python <= 3.12; if
+# your local interpreter is newer, run these three inside the Docker Spark 3.5 image recommended
+# in README.md (it bundles its own compatible Python) rather than upgrading pyspark.
+#
+# numpy is needed for calibrate.py and calibrate_test.py, both of which DO run in this pass
+# against the local Python interpreter — no pyspark/cluster dependency there.
+pyspark==3.5.*
+numpy>=1.26

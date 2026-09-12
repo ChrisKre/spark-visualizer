@@ -41,19 +41,24 @@ function hashResult(config: (typeof CANONICAL_CONFIGS)[string], seed: number): s
 
 // GOLDEN HASHES — committed truth. A hash changing means simulate()'s output changed for that
 // config; the PR must explain why the old output was wrong (docs/CONTRIBUTING.md).
+// SAS-025 (E3) — regenerated after replacing the hand-written PLACEHOLDER constants with
+// calibrate.py's fit against the (synthetic, see tools/capture/README.md) fixture grid. The old
+// output wasn't "wrong" — the constants it was computed from were always documented as a
+// stand-in; a golden hash changing here reflects that stand-in being replaced, not a simulator
+// bug. See docs/calibration-report.md for the fit's residuals.
 const GOLDEN_HASHES: Record<string, string> = {
-  uniform: '280cff89',
-  'mild-skew': '73695eab',
-  'visible-straggler': 'afdac729',
-  'hero-before': '050383e3',
-  'partial-fix': '3071c526',
-  'hero-after': '2989b45c',
-  'null-trap': '9c07aadd',
-  'severe-skew': 'a05c10df',
-  'aqe-off': '4514ee23',
-  'aqe-coalesce-only': '68b9bd7e',
-  'aqe-skew-split': '5cdb2830',
-  'aqe-join-switch': '77a0a6fd',
+  uniform: 'db36da41',
+  'mild-skew': '8c367d6b',
+  'visible-straggler': '8418ea57',
+  'hero-before': '260c43a9',
+  'partial-fix': '2a70ac53',
+  'hero-after': 'c5327445',
+  'null-trap': '8fe77474',
+  'severe-skew': 'a9339273',
+  'aqe-off': '08d40a66',
+  'aqe-coalesce-only': '1781157a',
+  'aqe-skew-split': '4127aa9f',
+  'aqe-join-switch': '2906a9ae',
 };
 
 const SEED = 1;
