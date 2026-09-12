@@ -6,3 +6,5 @@ export { computeActiveRewrite } from './planRewrites';
 export type { PlanRewrite, RewriteRule } from './planRewrites';
 export { PlanTree } from './PlanTree';
 export type { PlanTreeProps } from './PlanTree';
+export { MemoryBar } from './MemoryBar';
+export type { MemoryBarProps } from './MemoryBar';
