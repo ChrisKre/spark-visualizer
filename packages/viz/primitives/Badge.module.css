@@ -1,0 +1,25 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: var(--text-2xs);
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.measured {
+  color: var(--ok);
+  background: var(--ok-soft);
+}
+
+.modeled {
+  color: var(--muted);
+  background: var(--surface-2);
+}
+
+.executed {
+  color: var(--accent);
+  background: var(--accent-soft);
+}

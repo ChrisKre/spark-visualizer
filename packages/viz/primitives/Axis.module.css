@@ -1,0 +1,18 @@
+.axis {
+  color: var(--muted);
+}
+
+.tickLine {
+  stroke: var(--rule);
+}
+
+.tickLabel {
+  fill: var(--muted);
+  font-size: var(--text-2xs);
+  font-family: var(--font-mono);
+}
+
+.axisLabel {
+  fill: var(--body);
+  font-size: var(--text-xs);
+}
