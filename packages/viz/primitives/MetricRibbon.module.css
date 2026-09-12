@@ -1,0 +1,72 @@
+.ribbon {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--rule);
+  overflow-x: auto;
+}
+
+.row {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.5rem 1rem;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 6rem;
+}
+
+/* Every metric but CPU-s may collapse at narrow widths — CPU-s (alwaysVisible) never does;
+   see MetricRibbon.tsx and BACKLOG SAS-043's "never hidden at narrow widths" rule. */
+.collapsible {
+  flex-shrink: 1;
+}
+
+.alwaysVisible {
+  flex-shrink: 0;
+}
+
+.label {
+  font-size: var(--text-2xs);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.value {
+  font-size: var(--text-md);
+  font-family: var(--font-mono);
+  color: var(--ink);
+}
+
+.compare {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+}
+
+.beforeAfter {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.delta {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.better {
+  color: var(--ok);
+}
+
+.worse {
+  color: var(--crit);
+}
+
+.neutral {
+  color: var(--muted);
+}
