@@ -1,0 +1,69 @@
+.tree {
+  max-width: 100%;
+}
+
+.node {
+  fill: var(--surface);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+
+.nodeLabel {
+  fill: var(--body);
+  font-size: var(--text-2xs);
+  font-family: var(--font-mono);
+}
+
+.edge {
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+
+.annotationRule {
+  fill: var(--accent);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.annotationDescription {
+  fill: var(--body);
+  font-size: var(--text-xs);
+}
+
+/* CSS animations (not transitions) so the effect plays from its `from` keyframe even though
+   the class is present from this element's very first paint — a transition would need an
+   actual property change on an already-painted element to animate, which a freshly-mounted
+   node never gets. */
+.exiting {
+  animation: planTreeExit 220ms ease forwards;
+}
+
+.entering {
+  animation: planTreeEnter 220ms ease;
+}
+
+@keyframes planTreeExit {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes planTreeEnter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exiting,
+  .entering {
+    animation: none;
+  }
+}
