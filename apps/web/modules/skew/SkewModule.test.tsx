@@ -1,8 +1,11 @@
 /** @vitest-environment jsdom */
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { simulate } from '@sas/sim';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppStore } from '../../store/useAppStore';
+import { buildRunConfig } from './buildRunConfig';
 import { SkewModule } from './SkewModule';
 import { KNOB_DEFAULTS } from './knobs';
 
@@ -64,5 +67,42 @@ describe('SkewModule', () => {
   it('renders a play/pause scrubber wired to the clock', () => {
     render(<SkewModule />);
     expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument();
+  });
+
+  it('toggling Compare switches to before/after panes, two timelines and a compare ribbon', async () => {
+    const user = userEvent.setup();
+    render(<SkewModule />);
+
+    expect(screen.getAllByRole('img', { name: 'Task timeline' })).toHaveLength(1);
+
+    await user.click(screen.getByRole('checkbox', { name: 'Compare before/after' }));
+
+    expect(useAppStore.getState().compare).toBe(true);
+    expect(screen.getAllByRole('img', { name: 'Task timeline' })).toHaveLength(2);
+    // Appears in both the histogram (chart label + its visually-hidden data table, once per
+    // row) and each timeline pane's own header — the exact count isn't the point, presence is.
+    expect(screen.getAllByText('Before (salt 1)').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('After').length).toBeGreaterThan(0);
+    // MetricRibbon's compare mode renders before/after/delta per metric — MODELED badge
+    // appears twice now (once per pane) instead of once.
+    expect(screen.getAllByText('MODELED')).toHaveLength(2);
+  });
+
+  it('compare mode picks the longer (unsalted "before") run as the clock duration', async () => {
+    const user = userEvent.setup();
+    render(<SkewModule />);
+    await user.click(screen.getByRole('checkbox', { name: 'Compare before/after' }));
+
+    // Default knobs start at salt=1, so "before" and "after" coincide — salt the knob to
+    // make them diverge, matching useSkewRun.test.ts's own compare-mode duration assertion.
+    fireEvent.change(screen.getByRole('slider', { name: 'Salt factor' }), { target: { value: '8' } });
+
+    const expectedBefore = simulate(buildRunConfig({ ...KNOB_DEFAULTS, salt: 1 }), 42).metrics.wallClockMs;
+    const expectedAfter = simulate(buildRunConfig({ ...KNOB_DEFAULTS, salt: 8 }), 42).metrics.wallClockMs;
+    // Salting always reduces wall clock in this scenario (buildRunConfig.test.ts asserts
+    // this directly) — so the duration-setting side must be the unsalted "before", not
+    // "after", and definitely not their sum or average.
+    expect(expectedBefore).toBeGreaterThan(expectedAfter);
+    expect(useAppStore.getState().clock.duration).toBe(expectedBefore);
   });
 });
