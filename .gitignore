@@ -13,6 +13,9 @@ out/
 # raw third-party data (docs/DATA_PIPELINE.md §6); only the derived apps/web/public/data/*.parquet
 # artifacts are committed.
 /tools/data/_raw/
+# SAS-054 — tools/copy-fixtures.mjs regenerates this from packages/fixtures/data on every
+# dev/build; committing it would just be a second, driftable copy of the same JSON.
+/apps/web/public/fixtures/
 coverage/
 .turbo/
 .vercel/

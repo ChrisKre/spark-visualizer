@@ -5,6 +5,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppStore } from '../../store/useAppStore';
+import { resetMeasuredFixturesCache } from '../../fixtures/loadMeasuredFixtures';
 import { buildRunConfig } from './buildRunConfig';
 import { SkewModule } from './SkewModule';
 import { KNOB_DEFAULTS } from './knobs';
@@ -29,6 +30,11 @@ beforeEach(() => {
     vi.fn().mockReturnValue({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() }),
   );
   vi.stubGlobal('ResizeObserver', NoopResizeObserver);
+  // No committed fixture is non-synthetic yet, so an always-404 fetch is the deterministic,
+  // explicit stand-in for "the fixture index hasn't resolved to anything yet" — see
+  // apps/web/fixtures/loadMeasuredFixtures.ts.
+  vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false }) as Response));
+  resetMeasuredFixturesCache();
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(mockCanvasContext() as unknown as CanvasRenderingContext2D);
   useAppStore.setState(useAppStore.getInitialState(), true);
   window.history.replaceState(null, '', '/m/skew');
@@ -37,6 +43,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
+  resetMeasuredFixturesCache();
 });
 
 describe('SkewModule', () => {
