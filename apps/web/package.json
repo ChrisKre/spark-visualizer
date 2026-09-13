@@ -14,7 +14,8 @@
     "@sas/viz": "workspace:*",
     "next": "^15.0.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "zustand": "^5.0.0"
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^15.0.0",
