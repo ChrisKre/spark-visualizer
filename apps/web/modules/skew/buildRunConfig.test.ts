@@ -1,4 +1,4 @@
-import { DEFAULT_RUN_CONFIG } from '@sas/sim';
+import { DEFAULT_RUN_CONFIG, simulate } from '@sas/sim';
 import { describe, expect, it } from 'vitest';
 import { buildRunConfig } from './buildRunConfig';
 import { KNOB_DEFAULTS } from './knobs';
@@ -13,11 +13,19 @@ describe('buildRunConfig', () => {
     expect(config.sql.shufflePartitions).toBe(KNOB_DEFAULTS.sp);
   });
 
-  it('leaves every field the knobs do not touch at DEFAULT_RUN_CONFIG\'s value', () => {
+  it('leaves fields the knobs do not touch (e.g. adaptive settings) at DEFAULT_RUN_CONFIG\'s value', () => {
     const config = buildRunConfig(KNOB_DEFAULTS);
-    expect(config.data.rows).toBe(DEFAULT_RUN_CONFIG.data.rows);
     expect(config.sql.adaptive).toEqual(DEFAULT_RUN_CONFIG.sql.adaptive);
-    expect(config.query).toEqual(DEFAULT_RUN_CONFIG.query);
+  });
+
+  it('scales the fact and dimension sides well past the broadcast threshold', () => {
+    // DEFAULT_RUN_CONFIG's own `query.other` (265 tiny rows) sits under
+    // autoBroadcastJoinThresholdMiB, which would pick a BroadcastHashJoin and never shuffle
+    // the fact side at all — see buildRunConfig.ts's header comment. Guards against silently
+    // reintroducing that regression.
+    const config = buildRunConfig(KNOB_DEFAULTS);
+    const result = simulate(config, 42);
+    expect(result.plan.initial.kind).not.toBe('BroadcastHashJoin');
   });
 
   it('maps each knob to its RunConfig field', () => {
@@ -34,6 +42,16 @@ describe('buildRunConfig', () => {
     expect(config.data.zipfAlpha).toBe(2.0);
     expect(config.data.saltFactor).toBe(KNOB_DEFAULTS.salt);
     expect(config.cluster.executors).toBe(KNOB_DEFAULTS.ex);
+  });
+
+  it('salting cuts the straggler ratio sharply while cpuSeconds stays flat', () => {
+    // The scenario's whole reason for being tuned this way — docs/modules/m1-skew.md §5:
+    // "watch the CPU-s column stay flat while wall clock explodes."
+    const unsalted = simulate(buildRunConfig({ ...KNOB_DEFAULTS, salt: 1 }), 42).metrics;
+    const salted = simulate(buildRunConfig({ ...KNOB_DEFAULTS, salt: 8 }), 42).metrics;
+    expect(salted.stragglerRatio).toBeLessThan(unsalted.stragglerRatio / 2);
+    expect(salted.wallClockMs).toBeLessThan(unsalted.wallClockMs);
+    expect(Math.abs(salted.cpuSeconds - unsalted.cpuSeconds) / unsalted.cpuSeconds).toBeLessThan(0.05);
   });
 
   it('never mutates DEFAULT_RUN_CONFIG', () => {
