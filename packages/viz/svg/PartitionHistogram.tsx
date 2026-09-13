@@ -29,7 +29,7 @@ interface RankedBar {
   bytes: number;
 }
 
-const MARGIN = { top: 28, right: 16, bottom: 40, left: 64 };
+const MARGIN = { top: 36, right: 16, bottom: 40, left: 64 };
 const PANE_GAP = 24;
 
 export function PartitionHistogram(props: PartitionHistogramProps): JSX.Element {
@@ -104,25 +104,29 @@ export function PartitionHistogram(props: PartitionHistogramProps): JSX.Element 
             </text>
           </g>
         ))}
-        {tallestPane && tallestBar ? (
-          <g>
-            <line
-              x1={(tallestPane.xScale(String(tallestBar.rank)) ?? 0) + tallestPane.xScale.bandwidth() / 2}
-              x2={(tallestPane.xScale(String(tallestBar.rank)) ?? 0) + tallestPane.xScale.bandwidth() / 2}
-              y1={yScale(tallestBar.bytes)}
-              y2={Math.max(y0, yScale(tallestBar.bytes) - 20)}
-              className={styles.leaderLine}
-            />
-            <text
-              x={(tallestPane.xScale(String(tallestBar.rank)) ?? 0) + tallestPane.xScale.bandwidth() / 2}
-              y={Math.max(y0, yScale(tallestBar.bytes) - 24)}
-              textAnchor="middle"
-              className={styles.annotation}
-            >
-              {formatBytes(tallestBar.bytes)} in one partition
-            </text>
-          </g>
-        ) : null}
+        {tallestPane && tallestBar
+          ? (() => {
+              const barLeft = tallestPane.xScale(String(tallestBar.rank)) ?? 0;
+              const barCenter = barLeft + tallestPane.xScale.bandwidth() / 2;
+              const barTop = yScale(tallestBar.bytes);
+              // The tallest bar is always rank 0 of whichever pane holds it (each pane is
+              // sorted descending) — i.e. always at that pane's *left* edge. Center-anchoring
+              // the annotation text would bleed it leftward into the y-axis's tick labels for
+              // the first pane, so it's left-anchored at the bar instead, extending rightward
+              // into empty chart space. The vertical clamp floors at 0 (the viewBox's own top
+              // edge), not y0 (the plot area's top) — y0 IS where the tallest bar's own top
+              // sits by construction (it defines the scale's domain max), so clamping to y0
+              // would always cancel the upward offset back to zero.
+              return (
+                <g>
+                  <line x1={barCenter} x2={barCenter} y1={barTop} y2={Math.max(0, barTop - 16)} className={styles.leaderLine} />
+                  <text x={barLeft + 2} y={Math.max(14, barTop - 20)} textAnchor="start" className={styles.annotation}>
+                    {formatBytes(tallestBar.bytes)} in one partition
+                  </text>
+                </g>
+              );
+            })()
+          : null}
       </ChartFrame>
       <table className={styles.srOnly}>
         <caption>{title}</caption>
