@@ -1,40 +1,45 @@
-import { DEFAULT_RUN_CONFIG, asBytes, asMiB } from '@sas/sim';
-import { loadFixture } from '@sas/fixtures';
-import { ChartFrame } from '@sas/viz';
-import { UI_PACKAGE_READY } from '@sas/ui';
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import type { JSX } from 'react';
+import { MODULE_REGISTRY } from '../modules/registry';
+import styles from './page.module.css';
 
-// Proves the workspace graph from ARCHITECTURE.md §2 is real, not just apps/web building
-// in isolation: this route imports from all four packages. Real landing-page content
-// lands in SAS-075.
-const packagesReady = [
-  ['@sas/sim', typeof DEFAULT_RUN_CONFIG === 'object'],
-  // @sas/viz's real chart primitives landed in E5 — proves the boundary against its actual
-  // API now, not a scaffold sentinel.
-  ['@sas/viz', typeof ChartFrame === 'function'],
-  ['@sas/ui', UI_PACKAGE_READY],
-  // @sas/fixtures's real loader landed in SAS-022 (E3) — proves the boundary against its
-  // actual API now, not a scaffold sentinel.
-  ['@sas/fixtures', typeof loadFixture === 'function'],
-] as const;
+// SAS-075 (E8) — replaces the E1 boundary-proof scaffold. Module cards read
+// apps/web/modules/registry.ts's MODULE_REGISTRY, the same source Nav.tsx reads, so a future
+// module (M3+) appears here the moment it's registered — no landing-page edit required.
+export const metadata: Metadata = {
+  title: 'Shuffle & Spill',
+  description: 'A Spark shuffle, skew and AQE visualiser.',
+};
 
-// Also exercises the branded unit types across a package boundary.
-const exampleBytes = asBytes(1024 * 1024);
-const exampleMiB = asMiB(1);
+const FRAMING =
+  'Start with skew: one hot key holds up 200 tasks while the other 199 finish in the first ' +
+  'nine seconds. Every module here runs on the same engine — real partition sizing, real task ' +
+  'scheduling, the same metric ribbon — so once the first one makes sense, the rest are just ' +
+  'new questions asked of it.';
 
-export default function HomePage() {
+export default function HomePage(): JSX.Element {
   return (
-    <main>
-      <h1>Shuffle &amp; Spill</h1>
-      <p>Foundation scaffold — E1 in progress.</p>
-      <ul>
-        {packagesReady.map(([name, ready]) => (
-          <li key={name}>
-            {name}: {ready ? 'ready' : 'not ready'}
+    <main className={styles.main}>
+      <section className={styles.hero}>
+        <h1>Shuffle &amp; Spill</h1>
+        <p className={styles.pitch}>A Spark shuffle, skew and AQE visualiser.</p>
+        <p className={styles.framing}>{FRAMING}</p>
+      </section>
+
+      <ul className={styles.modules}>
+        {MODULE_REGISTRY.map((module) => (
+          <li key={module.id}>
+            <Link href={`/m/${module.id}`} className={styles.moduleCard}>
+              <h2>{module.title}</h2>
+              <p>{module.summary}</p>
+            </Link>
           </li>
         ))}
       </ul>
-      <p>
-        example: {exampleBytes} Bytes / {exampleMiB} MiB
+
+      <p className={styles.aboutLink}>
+        <Link href="/about">About the data</Link>
       </p>
     </main>
   );
