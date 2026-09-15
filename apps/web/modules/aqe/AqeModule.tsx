@@ -3,7 +3,7 @@
 // SAS-060...065 (E7) — scaffold, knobs, the plan tree wired to a live run, the partition
 // strip, the AQE off/on compare mode, and the code pane.
 import { CodePane, CopyLinkButton, Scrubber } from '@sas/ui';
-import { Badge, MetricRibbon, PartitionStrip, PlanTree, TaskTimeline } from '@sas/viz';
+import { Badge, MetricRibbon, PartitionStrip, PlanTree, RunWarnings, TaskTimeline } from '@sas/viz';
 import { asSimMs, type RunResult } from '@sas/sim';
 import { useEffect, useId, type JSX } from 'react';
 import { track } from '../../analytics/track';
@@ -11,7 +11,7 @@ import { ClockDriver } from '../../store/ClockDriver';
 import { useAppActions, useClock, useCompare, useKnobs } from '../../store/useAppStore';
 import { buildRunConfig } from './buildRunConfig';
 import { buildConfigText, buildPlanDiffText, EXPLAIN_PLACEHOLDER } from './codeContent';
-import { SETUP, TITLE } from './copy';
+import { FIXTURE_FETCH_NOTICE, SETUP, TITLE } from './copy';
 import { KnobPanel } from './KnobPanel';
 import { KNOB_DEFAULTS } from './knobs';
 import { deriveAfterPartitionBytes } from './partitionStripCells';
@@ -55,7 +55,7 @@ export function AqeModule(): JSX.Element {
     track('module_opened', { module: 'aqe' });
   }, [setModule]);
 
-  const { after, before } = useAqeRun();
+  const { after, before, fixturesUnavailable } = useAqeRun();
   const domainMs: [number, number] = [0, Math.max(1, clock.duration)];
   const stage0Bytes = after.stages[0]?.partitionBytes ?? [];
 
@@ -70,6 +70,7 @@ export function AqeModule(): JSX.Element {
       <h1>{TITLE}</h1>
       <p className={styles.setup}>{SETUP}</p>
       <KnobPanel />
+      {fixturesUnavailable ? <p className={styles.fixtureNotice}>{FIXTURE_FETCH_NOTICE}</p> : null}
 
       <div className={styles.runHeader}>
         <label className={styles.compareToggle} htmlFor={compareToggleId}>
@@ -115,6 +116,8 @@ export function AqeModule(): JSX.Element {
           </div>
 
           <MetricRibbon mode="compare" before={toMetricValues(before)} after={toMetricValues(after)} metrics={AQE_METRICS} />
+          <RunWarnings warnings={before.warnings} label="AQE off" />
+          <RunWarnings warnings={after.warnings} label="AQE on" />
         </>
       ) : (
         <>
@@ -133,6 +136,7 @@ export function AqeModule(): JSX.Element {
           <TimelinePane run={after} currentMs={clock.t} domainMs={domainMs} />
 
           <MetricRibbon mode="single" values={toMetricValues(after)} metrics={AQE_METRICS} />
+          <RunWarnings warnings={after.warnings} />
         </>
       )}
 

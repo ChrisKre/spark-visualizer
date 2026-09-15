@@ -34,10 +34,12 @@ beforeEach(() => {
     vi.fn().mockReturnValue({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() }),
   );
   vi.stubGlobal('ResizeObserver', NoopResizeObserver);
-  // No committed fixture is non-synthetic yet, so an always-404 fetch is the deterministic,
-  // explicit stand-in for "the fixture index hasn't resolved to anything yet" — see
-  // apps/web/fixtures/loadMeasuredFixtures.ts.
-  vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false }) as Response));
+  // No committed fixture is non-synthetic yet, so an empty-but-successful manifest is the
+  // deterministic stand-in for today's real production state — see
+  // apps/web/fixtures/loadMeasuredFixtures.ts. Deliberately *not* `{ ok: false }`: that would
+  // mean "the manifest fetch failed" (SAS-076's `fetchFailed`), which would spuriously show the
+  // fixture-fetch-failure notice in every test in this file.
+  vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => [] }) as Response));
   resetMeasuredFixturesCache();
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(mockCanvasContext() as unknown as CanvasRenderingContext2D);
   useAppStore.setState(useAppStore.getInitialState(), true);
@@ -163,6 +165,17 @@ describe('SkewModule', () => {
 
     await user.click(screen.getByRole('tab', { name: 'EXPLAIN' }));
     expect(screen.getByText(/none is available yet/i)).toBeInTheDocument();
+  });
+
+  it('shows a quiet notice when the fixture manifest fetch genuinely fails, and none otherwise', async () => {
+    render(<SkewModule />);
+    expect(screen.queryByText(/measured-fixture data/)).not.toBeInTheDocument();
+    cleanup();
+
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false }) as Response));
+    resetMeasuredFixturesCache();
+    render(<SkewModule />);
+    expect(await screen.findByText(/measured-fixture data/)).toBeInTheDocument();
   });
 
   it('the Config tab diffs before vs after once compare mode is on', async () => {

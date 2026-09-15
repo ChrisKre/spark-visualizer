@@ -145,4 +145,20 @@ describe('useSkewRun', () => {
       expect(result.current.after.provenance).toBe('modeled');
     });
   });
+
+  describe('fixturesUnavailable (SAS-076)', () => {
+    it('is false while the manifest fetch is still pending, and stays false once it resolves fine', async () => {
+      vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => [] }) as Response));
+      const { result } = renderHook(() => useSkewRun());
+      expect(result.current.fixturesUnavailable).toBe(false);
+      await waitFor(() => expect(result.current.after).toBeDefined());
+      expect(result.current.fixturesUnavailable).toBe(false);
+    });
+
+    it('flips true once a genuinely failed manifest fetch resolves', async () => {
+      vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false }) as Response));
+      const { result } = renderHook(() => useSkewRun());
+      await waitFor(() => expect(result.current.fixturesUnavailable).toBe(true));
+    });
+  });
 });

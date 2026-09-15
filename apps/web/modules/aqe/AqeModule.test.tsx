@@ -33,7 +33,10 @@ beforeEach(() => {
     vi.fn().mockReturnValue({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() }),
   );
   vi.stubGlobal('ResizeObserver', NoopResizeObserver);
-  vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false }) as Response));
+  // See SkewModule.test.tsx's identical mock for why this is an empty-but-successful manifest
+  // (`fetchFailed: false`), not `{ ok: false }` (SAS-076's fixture-fetch-failure notice would
+  // spuriously appear in every test in this file otherwise).
+  vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => [] }) as Response));
   resetMeasuredFixturesCache();
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(mockCanvasContext() as unknown as CanvasRenderingContext2D);
   useAppStore.setState(useAppStore.getInitialState(), true);
@@ -173,6 +176,17 @@ describe('AqeModule', () => {
     const off = simulate(buildRunConfig({ ...KNOB_DEFAULTS, skf: 2, aqe: 0 }), 42).metrics.wallClockMs;
     const on = simulate(buildRunConfig({ ...KNOB_DEFAULTS, skf: 2 }), 42).metrics.wallClockMs;
     expect(useAppStore.getState().clock.duration).toBe(Math.max(off, on));
+  });
+
+  it('shows a quiet notice when the fixture manifest fetch genuinely fails, and none otherwise', async () => {
+    render(<AqeModule />);
+    expect(screen.queryByText(/measured-fixture data/)).not.toBeInTheDocument();
+    cleanup();
+
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false }) as Response));
+    resetMeasuredFixturesCache();
+    render(<AqeModule />);
+    expect(await screen.findByText(/measured-fixture data/)).toBeInTheDocument();
   });
 
   it('renders a code pane with Diff, Config and EXPLAIN tabs', async () => {

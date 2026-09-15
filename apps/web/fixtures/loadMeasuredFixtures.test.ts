@@ -59,8 +59,9 @@ describe('loadMeasuredFixtures', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    const fixtures = await loadMeasuredFixtures();
-    expect(fixtures.map((f) => f.id)).toEqual(['real_one']);
+    const result = await loadMeasuredFixtures();
+    expect(result.fixtures.map((f) => f.id)).toEqual(['real_one']);
+    expect(result.fetchFailed).toBe(false);
   });
 
   it('caches the result — a second call does not refetch', async () => {
@@ -72,17 +73,22 @@ describe('loadMeasuredFixtures', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('returns an empty list, never throws, when the manifest fetch fails', async () => {
+  it('reports fetchFailed, never throws, when the manifest fetch fails', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => jsonResponse(undefined, false)));
-    await expect(loadMeasuredFixtures()).resolves.toEqual([]);
+    await expect(loadMeasuredFixtures()).resolves.toEqual({ fixtures: [], fetchFailed: true });
   });
 
-  it('returns an empty list, never throws, when fetch itself rejects (offline)', async () => {
+  it('reports fetchFailed, never throws, when fetch itself rejects (offline)', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => { throw new Error('network down'); }));
-    await expect(loadMeasuredFixtures()).resolves.toEqual([]);
+    await expect(loadMeasuredFixtures()).resolves.toEqual({ fixtures: [], fetchFailed: true });
   });
 
-  it('drops one fixture that fails to fetch without failing the whole index', async () => {
+  it('does not report fetchFailed when the manifest loads fine but lists nothing', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse([])));
+    await expect(loadMeasuredFixtures()).resolves.toEqual({ fixtures: [], fetchFailed: false });
+  });
+
+  it('drops one fixture that fails to fetch without failing the whole index or reporting fetchFailed', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
       if (url === '/fixtures/index.json') return jsonResponse(['ok_one', 'missing_one']);
@@ -91,7 +97,8 @@ describe('loadMeasuredFixtures', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    const fixtures = await loadMeasuredFixtures();
-    expect(fixtures.map((f) => f.id)).toEqual(['ok_one']);
+    const result = await loadMeasuredFixtures();
+    expect(result.fixtures.map((f) => f.id)).toEqual(['ok_one']);
+    expect(result.fetchFailed).toBe(false);
   });
 });
