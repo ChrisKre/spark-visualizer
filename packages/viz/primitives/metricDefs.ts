@@ -1,6 +1,6 @@
 // The six-metric definition list MetricRibbon renders, in the fixed order BACKLOG specifies:
 // "wall clock · CPU-s · straggler ratio · shuffle read · disk spilled · GC %".
-import { formatBytes, formatDuration, formatPercent, formatRatio } from '@sas/ui';
+import { formatBytes, formatCount, formatDuration, formatPercent, formatRatio } from '@sas/ui';
 
 export type MetricKey =
   | 'wallClockMs'
@@ -8,7 +8,8 @@ export type MetricKey =
   | 'stragglerRatio'
   | 'shuffleReadBytes'
   | 'diskSpilledBytes'
-  | 'gcPercent';
+  | 'gcPercent'
+  | 'taskCount';
 
 export interface MetricDef {
   key: MetricKey;
@@ -37,3 +38,9 @@ export const DEFAULT_METRICS: MetricDef[] = [
   { key: 'diskSpilledBytes', label: 'Disk spilled', format: formatBytes, lowerIsBetter: true },
   { key: 'gcPercent', label: 'GC %', format: formatPercent, lowerIsBetter: true },
 ];
+
+// M2's 7th metric (BACKLOG SAS-064/docs/modules/m2-aqe.md §5): "same six metrics as M1, plus
+// task count — because the headline win from coalescing is the tasks that never launch."
+// Composed onto DEFAULT_METRICS by the caller (via MetricRibbon's own `metrics?` override
+// prop) rather than added to DEFAULT_METRICS itself, so M1's own ribbon stays unchanged.
+export const TASK_COUNT_METRIC: MetricDef = { key: 'taskCount', label: 'Task count', format: formatCount, lowerIsBetter: true };
