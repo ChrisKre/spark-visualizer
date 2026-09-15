@@ -2,14 +2,18 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppStore } from '../../store/useAppStore';
 import { KnobPanel } from './KnobPanel';
 import { KNOB_DEFAULTS } from './knobs';
 
+const track = vi.fn();
+vi.mock('../../analytics/track', () => ({ track: (...args: unknown[]) => track(...args) }));
+
 beforeEach(() => {
   useAppStore.setState(useAppStore.getInitialState(), true);
   useAppStore.getState().setKnobs(KNOB_DEFAULTS);
+  track.mockClear();
 });
 
 afterEach(cleanup);
@@ -39,5 +43,14 @@ describe('KnobPanel', () => {
     expect(details.open).toBe(false);
     await user.click(screen.getByText('Advanced'));
     expect(details.open).toBe(true);
+  });
+
+  it('tracks knob_first_touched once, on whichever knob is dragged first', () => {
+    render(<KnobPanel />);
+    fireEvent.change(screen.getByRole('slider', { name: 'Salt factor' }), { target: { value: '8' } });
+    fireEvent.change(screen.getByRole('slider', { name: 'Executors' }), { target: { value: '4' } });
+
+    expect(track).toHaveBeenCalledTimes(1);
+    expect(track).toHaveBeenCalledWith('knob_first_touched', { module: 'skew', knob: 'salt' });
   });
 });

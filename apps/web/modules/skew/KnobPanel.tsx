@@ -4,7 +4,8 @@
 // docs/modules/m1-skew.md §3: "sp is exposed as an advanced knob behind a disclosure, so the
 // primary control set stays at four."
 import { Knob } from '@sas/ui';
-import type { JSX } from 'react';
+import { useRef, type JSX } from 'react';
+import { track } from '../../analytics/track';
 import { useAppActions, useKnobs } from '../../store/useAppStore';
 import { ADVANCED_KNOB_DEFS, KNOB_DEFS, type KnobDef } from './knobs';
 import styles from './KnobPanel.module.css';
@@ -16,6 +17,9 @@ function formatFor(def: KnobDef): ((value: number) => string) | undefined {
 export function KnobPanel(): JSX.Element {
   const knobs = useKnobs();
   const { setKnob } = useAppActions();
+  // SAS-077 — "knob first-touched" fires once per module mount, on whichever knob the user
+  // touches first, not once per knob.
+  const firstTouch = useRef(false);
 
   function renderKnob(def: KnobDef) {
     return (
@@ -27,7 +31,13 @@ export function KnobPanel(): JSX.Element {
         max={def.max}
         step={def.step}
         value={knobs[def.id] ?? def.default}
-        onChange={(value) => setKnob(def.id, value)}
+        onChange={(value) => {
+          if (!firstTouch.current) {
+            firstTouch.current = true;
+            track('knob_first_touched', { module: 'skew', knob: def.id });
+          }
+          setKnob(def.id, value);
+        }}
         formatValue={formatFor(def)}
       />
     );

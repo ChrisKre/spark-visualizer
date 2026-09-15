@@ -8,5 +8,6 @@ export * from './Scrubber';
 export * from './Knob';
 export * from './Tabs';
 export * from './CodePane';
+export * from './CopyLinkButton';
 
 export const UI_PACKAGE_READY = true as const;
