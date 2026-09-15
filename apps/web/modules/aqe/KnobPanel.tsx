@@ -7,7 +7,8 @@
 // caption naming it a stand-in for stale table statistics, not a real Spark config — the
 // module doc's own acceptance criterion.
 import { Knob } from '@sas/ui';
-import { useId, type JSX } from 'react';
+import { useId, useRef, type JSX } from 'react';
+import { track } from '../../analytics/track';
 import { useAppActions, useKnobs } from '../../store/useAppStore';
 import { AQE_TOGGLE, KNOB_DEFS, type KnobDef } from './knobs';
 import styles from './KnobPanel.module.css';
@@ -22,6 +23,9 @@ export function KnobPanel(): JSX.Element {
   const knobs = useKnobs();
   const { setKnob } = useAppActions();
   const aqeToggleId = useId();
+  // SAS-077 — "knob first-touched" fires once per module mount, on whichever knob the user
+  // touches first, not once per knob.
+  const firstTouch = useRef(false);
 
   function renderKnob(def: KnobDef) {
     return (
@@ -33,7 +37,13 @@ export function KnobPanel(): JSX.Element {
           max={def.max}
           step={def.step}
           value={knobs[def.id] ?? def.default}
-          onChange={(value) => setKnob(def.id, value)}
+          onChange={(value) => {
+            if (!firstTouch.current) {
+              firstTouch.current = true;
+              track('knob_first_touched', { module: 'aqe', knob: def.id });
+            }
+            setKnob(def.id, value);
+          }}
           formatValue={formatFor(def)}
         />
         {def.id === 'est' ? (

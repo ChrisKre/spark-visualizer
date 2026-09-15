@@ -4,10 +4,11 @@
 // before/after compare mode. All panes read the same `clock.t` (ARCHITECTURE.md §4's "one
 // clock"); the Scrubber is what moves it, and PartitionHistogram/MetricRibbon's own compare
 // props are what keep before/after sharing one scale rather than two independent ones.
-import { CodePane, Scrubber } from '@sas/ui';
+import { CodePane, CopyLinkButton, Scrubber } from '@sas/ui';
 import { Badge, MetricRibbon, PartitionHistogram, RunWarnings, TaskTimeline } from '@sas/viz';
 import { asSimMs, type RunResult } from '@sas/sim';
 import { useEffect, useId, type JSX } from 'react';
+import { track } from '../../analytics/track';
 import { ClockDriver } from '../../store/ClockDriver';
 import { useAppActions, useClock, useCompare, useKnobs } from '../../store/useAppStore';
 import { useUrlSync } from '../../store/urlSync';
@@ -44,6 +45,7 @@ export function SkewModule() {
 
   useEffect(() => {
     setModule('skew', KNOB_DEFAULTS);
+    track('module_opened', { module: 'skew' });
   }, [setModule]);
 
   useUrlSync(KNOB_DEFAULTS);
@@ -80,10 +82,14 @@ export function SkewModule() {
             id={compareToggleId}
             type="checkbox"
             checked={compare}
-            onChange={(event) => setCompare(event.target.checked)}
+            onChange={(event) => {
+              setCompare(event.target.checked);
+              track('comparison_toggled', { module: 'skew', compare: event.target.checked });
+            }}
           />
           Compare before/after
         </label>
+        <CopyLinkButton onCopy={() => track('permalink_copied', { module: 'skew' })} />
         <Scrubber
           t={clock.t}
           duration={clock.duration}

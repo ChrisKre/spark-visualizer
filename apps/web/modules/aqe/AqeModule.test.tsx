@@ -23,7 +23,11 @@ function mockCanvasContext() {
   return { canvas: { width: 0, height: 0 }, clearRect: vi.fn(), fillRect: vi.fn(), setTransform: vi.fn(), fillStyle: '' };
 }
 
+const track = vi.fn();
+vi.mock('../../analytics/track', () => ({ track: (...args: unknown[]) => track(...args) }));
+
 beforeEach(() => {
+  track.mockClear();
   vi.stubGlobal(
     'matchMedia',
     vi.fn().mockReturnValue({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() }),
@@ -71,6 +75,28 @@ describe('AqeModule', () => {
   it('renders a play/pause scrubber wired to the clock', () => {
     render(<AqeModule />);
     expect(screen.getByRole('button', { name: 'Play' })).toBeInTheDocument();
+  });
+
+  it('tracks module_opened on mount', () => {
+    render(<AqeModule />);
+    expect(track).toHaveBeenCalledWith('module_opened', { module: 'aqe' });
+  });
+
+  it('tracks comparison_toggled when the compare checkbox flips', async () => {
+    const user = userEvent.setup();
+    render(<AqeModule />);
+    await user.click(screen.getByRole('checkbox', { name: 'Compare AQE off/on' }));
+    expect(track).toHaveBeenCalledWith('comparison_toggled', { module: 'aqe', compare: true });
+  });
+
+  it('copying the permalink tracks permalink_copied', async () => {
+    const user = userEvent.setup();
+    // userEvent.setup() installs its own Clipboard stub, overwriting anything defined before
+    // it — this must run after setup() so ours wins. See packages/ui/CopyLinkButton.test.tsx.
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn(async () => undefined) }, configurable: true });
+    render(<AqeModule />);
+    await user.click(screen.getByRole('button', { name: 'Copy link' }));
+    expect(track).toHaveBeenCalledWith('permalink_copied', { module: 'aqe' });
   });
 
   it('the plan tree annotates the coalesce rewrite once the clock reaches its firing point', () => {

@@ -2,10 +2,11 @@
 
 // SAS-060...065 (E7) — scaffold, knobs, the plan tree wired to a live run, the partition
 // strip, the AQE off/on compare mode, and the code pane.
-import { CodePane, Scrubber } from '@sas/ui';
+import { CodePane, CopyLinkButton, Scrubber } from '@sas/ui';
 import { Badge, MetricRibbon, PartitionStrip, PlanTree, RunWarnings, TaskTimeline } from '@sas/viz';
 import { asSimMs, type RunResult } from '@sas/sim';
 import { useEffect, useId, type JSX } from 'react';
+import { track } from '../../analytics/track';
 import { ClockDriver } from '../../store/ClockDriver';
 import { useAppActions, useClock, useCompare, useKnobs } from '../../store/useAppStore';
 import { buildRunConfig } from './buildRunConfig';
@@ -51,6 +52,7 @@ export function AqeModule(): JSX.Element {
 
   useEffect(() => {
     setModule('aqe', KNOB_DEFAULTS);
+    track('module_opened', { module: 'aqe' });
   }, [setModule]);
 
   const { after, before, fixturesUnavailable } = useAqeRun();
@@ -76,10 +78,14 @@ export function AqeModule(): JSX.Element {
             id={compareToggleId}
             type="checkbox"
             checked={compare}
-            onChange={(event) => setCompare(event.target.checked)}
+            onChange={(event) => {
+              setCompare(event.target.checked);
+              track('comparison_toggled', { module: 'aqe', compare: event.target.checked });
+            }}
           />
           Compare AQE off/on
         </label>
+        <CopyLinkButton onCopy={() => track('permalink_copied', { module: 'aqe' })} />
         <Scrubber
           t={clock.t}
           duration={clock.duration}
