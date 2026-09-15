@@ -32,6 +32,13 @@ export interface SkewRuns {
    * since it's a second simulate() call nothing else needs.
    */
   before?: RunResult;
+  /**
+   * SAS-076 (E8) — true when the measured-fixture manifest fetch genuinely failed, as opposed
+   * to loading fine and simply finding no non-synthetic fixtures (today's ordinary state). The
+   * module uses this to show a quiet "couldn't reach measured data" notice rather than staying
+   * silent about why a run that could have been MEASURED stayed MODELED.
+   */
+  fixturesUnavailable: boolean;
 }
 
 export function useSkewRun(): SkewRuns {
@@ -39,11 +46,14 @@ export function useSkewRun(): SkewRuns {
   const compare = useCompare();
   const { setDuration } = useAppActions();
   const [fixtures, setFixtures] = useState<ValidatedFixture[]>([]);
+  const [fixturesUnavailable, setFixturesUnavailable] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    loadMeasuredFixtures().then((loaded) => {
-      if (!cancelled) setFixtures(loaded);
+    loadMeasuredFixtures().then((result) => {
+      if (cancelled) return;
+      setFixtures(result.fixtures);
+      setFixturesUnavailable(result.fetchFailed);
     });
     return () => {
       cancelled = true;
@@ -64,5 +74,5 @@ export function useSkewRun(): SkewRuns {
     setDuration(asSimMs(duration));
   }, [before, after, setDuration]);
 
-  return { after, before };
+  return { after, before, fixturesUnavailable };
 }

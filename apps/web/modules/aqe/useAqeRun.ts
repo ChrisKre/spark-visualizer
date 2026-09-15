@@ -23,6 +23,12 @@ export interface AqeRuns {
    * hook when sql.adaptive.enabled is false), so `before.plan.initial === before.plan.final`.
    */
   before?: RunResult;
+  /**
+   * SAS-076 (E8) — true when the measured-fixture manifest fetch genuinely failed, as opposed
+   * to loading fine and simply finding no non-synthetic fixtures (today's ordinary state). See
+   * skew/useSkewRun.ts's identical field for the full rationale.
+   */
+  fixturesUnavailable: boolean;
 }
 
 export function useAqeRun(): AqeRuns {
@@ -30,11 +36,14 @@ export function useAqeRun(): AqeRuns {
   const compare = useCompare();
   const { setDuration } = useAppActions();
   const [fixtures, setFixtures] = useState<ValidatedFixture[]>([]);
+  const [fixturesUnavailable, setFixturesUnavailable] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    loadMeasuredFixtures().then((loaded) => {
-      if (!cancelled) setFixtures(loaded);
+    loadMeasuredFixtures().then((result) => {
+      if (cancelled) return;
+      setFixtures(result.fixtures);
+      setFixturesUnavailable(result.fetchFailed);
     });
     return () => {
       cancelled = true;
@@ -55,5 +64,5 @@ export function useAqeRun(): AqeRuns {
     setDuration(asSimMs(duration));
   }, [before, after, setDuration]);
 
-  return { after, before };
+  return { after, before, fixturesUnavailable };
 }

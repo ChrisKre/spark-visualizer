@@ -5,7 +5,7 @@
 // clock"); the Scrubber is what moves it, and PartitionHistogram/MetricRibbon's own compare
 // props are what keep before/after sharing one scale rather than two independent ones.
 import { CodePane, Scrubber } from '@sas/ui';
-import { Badge, MetricRibbon, PartitionHistogram, TaskTimeline } from '@sas/viz';
+import { Badge, MetricRibbon, PartitionHistogram, RunWarnings, TaskTimeline } from '@sas/viz';
 import { asSimMs, type RunResult } from '@sas/sim';
 import { useEffect, useId, type JSX } from 'react';
 import { ClockDriver } from '../../store/ClockDriver';
@@ -13,7 +13,7 @@ import { useAppActions, useClock, useCompare, useKnobs } from '../../store/useAp
 import { useUrlSync } from '../../store/urlSync';
 import { buildRunConfig } from './buildRunConfig';
 import { buildConfigText, DIFF_CODE, EXPLAIN_PLACEHOLDER } from './codeContent';
-import { NULL_TRAP_EXPLANATION, NULL_TRAP_PRESET_LABEL, SETUP, TITLE } from './copy';
+import { FIXTURE_FETCH_NOTICE, NULL_TRAP_EXPLANATION, NULL_TRAP_PRESET_LABEL, SETUP, TITLE } from './copy';
 import { pickHistogramStage } from './histogramStage';
 import { KnobPanel } from './KnobPanel';
 import { defaultFor, KNOB_DEFAULTS } from './knobs';
@@ -48,7 +48,7 @@ export function SkewModule() {
 
   useUrlSync(KNOB_DEFAULTS);
 
-  const { after, before } = useSkewRun();
+  const { after, before, fixturesUnavailable } = useSkewRun();
   const shufflePartitions = knobs.sp ?? defaultFor('sp');
   const domainMs: [number, number] = [0, Math.max(1, clock.duration)];
 
@@ -72,6 +72,7 @@ export function SkewModule() {
         </button>
       </div>
       {isNullTrapActive(knobs) ? <p className={styles.nullTrapCallout}>{NULL_TRAP_EXPLANATION}</p> : null}
+      {fixturesUnavailable ? <p className={styles.fixtureNotice}>{FIXTURE_FETCH_NOTICE}</p> : null}
 
       <div className={styles.runHeader}>
         <label className={styles.compareToggle} htmlFor={compareToggleId}>
@@ -108,6 +109,8 @@ export function SkewModule() {
             <TimelinePane label="After" run={after} currentMs={clock.t} domainMs={domainMs} />
           </div>
           <MetricRibbon mode="compare" before={toMetricValues(before.metrics)} after={toMetricValues(after.metrics)} />
+          <RunWarnings warnings={before.warnings} label="Before (salt 1)" />
+          <RunWarnings warnings={after.warnings} label="After" />
         </>
       ) : (
         <>
@@ -116,6 +119,7 @@ export function SkewModule() {
           ) : null}
           <TimelinePane run={after} currentMs={clock.t} domainMs={domainMs} />
           <MetricRibbon mode="single" values={toMetricValues(after.metrics)} />
+          <RunWarnings warnings={after.warnings} />
         </>
       )}
 

@@ -37,6 +37,16 @@
   font-size: var(--text-sm);
 }
 
+.fixtureNotice {
+  max-width: 60ch;
+  padding: 0.75rem 1rem;
+  margin: 0 0 1rem;
+  background: var(--surface-2);
+  color: var(--muted);
+  border-left: 3px solid var(--muted);
+  font-size: var(--text-sm);
+}
+
 .runHeader {
   display: flex;
   align-items: center;

@@ -9,7 +9,20 @@
 // re-exports loader.ts, which is exactly the Node-only file above.
 import { validateFixture, type ValidatedFixture } from '@sas/fixtures/schema';
 
-let cached: Promise<ValidatedFixture[]> | undefined;
+export interface MeasuredFixturesResult {
+  fixtures: ValidatedFixture[];
+  /**
+   * SAS-076 (E8) — true only when the manifest request itself failed (offline, blocked, a
+   * missing `/fixtures/index.json`), never when the manifest loaded fine and simply lists zero
+   * non-synthetic fixtures — that second case is today's ordinary, silent state (no capture
+   * session has landed yet, see BACKLOG.md's E3 sequencing note) and must not read as an error.
+   * docs/APP_STATE.md §5: "Fixture fetch fails → fall back to the model, badge flips to
+   * MODELED, a quiet notice explains why" — this flag is what gates that notice.
+   */
+  fetchFailed: boolean;
+}
+
+let cached: Promise<MeasuredFixturesResult> | undefined;
 
 async function fetchFixture(id: string): Promise<ValidatedFixture | undefined> {
   try {
@@ -21,25 +34,27 @@ async function fetchFixture(id: string): Promise<ValidatedFixture | undefined> {
   }
 }
 
-async function fetchIndex(): Promise<ValidatedFixture[]> {
+async function fetchIndex(): Promise<MeasuredFixturesResult> {
+  let ids: string[];
   try {
     const manifestResponse = await fetch('/fixtures/index.json');
-    if (!manifestResponse.ok) return [];
-    const ids: string[] = await manifestResponse.json();
-
-    const fixtures = await Promise.all(ids.map(fetchFixture));
-    // D3 (docs/SIMULATOR_SPEC.md §3): never let a synthetic fixture make the UI show MEASURED.
-    return fixtures.filter((fixture): fixture is ValidatedFixture => fixture !== undefined && !fixture.synthetic);
+    if (!manifestResponse.ok) return { fixtures: [], fetchFailed: true };
+    ids = await manifestResponse.json();
   } catch {
     // A fetch failure (offline, blocked, missing manifest) must never crash the module — it
     // just means every run falls back to simulate() and stays MODELED, same as having no
-    // fixtures at all.
-    return [];
+    // fixtures at all. The caller decides whether that's worth a quiet notice.
+    return { fixtures: [], fetchFailed: true };
   }
+
+  const fixtures = await Promise.all(ids.map(fetchFixture));
+  // D3 (docs/SIMULATOR_SPEC.md §3): never let a synthetic fixture make the UI show MEASURED.
+  const measured = fixtures.filter((fixture): fixture is ValidatedFixture => fixture !== undefined && !fixture.synthetic);
+  return { fixtures: measured, fetchFailed: false };
 }
 
 /** Lazily fetches and caches the non-synthetic fixture index for the lifetime of the page. */
-export function loadMeasuredFixtures(): Promise<ValidatedFixture[]> {
+export function loadMeasuredFixtures(): Promise<MeasuredFixturesResult> {
   if (!cached) cached = fetchIndex();
   return cached;
 }
