@@ -8,3 +8,5 @@ export { PlanTree } from './PlanTree';
 export type { PlanTreeProps } from './PlanTree';
 export { MemoryBar } from './MemoryBar';
 export type { MemoryBarProps } from './MemoryBar';
+export { PartitionStrip } from './PartitionStrip';
+export type { PartitionStripPane, PartitionStripProps } from './PartitionStrip';
