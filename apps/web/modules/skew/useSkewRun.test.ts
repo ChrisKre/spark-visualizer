@@ -17,14 +17,14 @@ afterEach(() => {
 });
 
 describe('useSkewRun', () => {
-  it('returns a modeled RunResult for the current knobs', () => {
+  it('returns a modeled "after" run for the current knobs, and no "before" outside compare mode', () => {
     const { result } = renderHook(() => useSkewRun());
-    expect(result.current.provenance).toBe('modeled');
-    expect(result.current.stages.length).toBeGreaterThan(0);
-    expect(result.current.tasks.length).toBeGreaterThan(0);
+    expect(result.current.after.provenance).toBe('modeled');
+    expect(result.current.after.stages.length).toBeGreaterThan(0);
+    expect(result.current.before).toBeUndefined();
   });
 
-  it('sets the store\'s clock duration to the run\'s wall clock', () => {
+  it('sets the store\'s clock duration to the run\'s wall clock outside compare mode', () => {
     const expected = simulate(buildRunConfig(KNOB_DEFAULTS), 42).metrics.wallClockMs;
     renderHook(() => useSkewRun());
     expect(useAppStore.getState().clock.duration).toBe(expected);
@@ -32,20 +32,47 @@ describe('useSkewRun', () => {
 
   it('recomputes when a knob changes, and the new duration follows it', () => {
     const { result, rerender } = renderHook(() => useSkewRun());
-    const before = result.current.metrics.wallClockMs;
+    const before = result.current.after.metrics.wallClockMs;
 
     act(() => {
       useAppStore.getState().setKnob('salt', 8);
     });
     rerender();
 
-    expect(result.current.metrics.wallClockMs).not.toBe(before);
-    expect(useAppStore.getState().clock.duration).toBe(result.current.metrics.wallClockMs);
+    expect(result.current.after.metrics.wallClockMs).not.toBe(before);
+    expect(useAppStore.getState().clock.duration).toBe(result.current.after.metrics.wallClockMs);
   });
 
   it('is deterministic for the same knobs', () => {
-    const a = renderHook(() => useSkewRun()).result.current;
-    const b = renderHook(() => useSkewRun()).result.current;
+    const a = renderHook(() => useSkewRun()).result.current.after;
+    const b = renderHook(() => useSkewRun()).result.current.after;
     expect(a.metrics).toEqual(b.metrics);
+  });
+
+  describe('compare mode', () => {
+    beforeEach(() => {
+      useAppStore.getState().setCompare(true);
+    });
+
+    it('computes a "before" run with salt forced to 1, regardless of the salt knob', () => {
+      useAppStore.getState().setKnob('salt', 8);
+      const { result } = renderHook(() => useSkewRun());
+      expect(result.current.before).toBeDefined();
+      const expectedBefore = simulate(buildRunConfig({ ...KNOB_DEFAULTS, salt: 1 }), 42).metrics;
+      expect(result.current.before?.metrics).toEqual(expectedBefore);
+    });
+
+    it('sets duration to the longer of before/after, not their sum or average', () => {
+      useAppStore.getState().setKnob('salt', 8);
+      const { result } = renderHook(() => useSkewRun());
+      const expectedDuration = Math.max(
+        result.current.before?.metrics.wallClockMs ?? 0,
+        result.current.after.metrics.wallClockMs,
+      );
+      expect(useAppStore.getState().clock.duration).toBe(expectedDuration);
+      // Sanity: the unsalted "before" really is the slower one here, so this test would
+      // catch a regression to "always after's duration" as well as to "sum"/"average".
+      expect(expectedDuration).toBe(result.current.before?.metrics.wallClockMs);
+    });
   });
 });
