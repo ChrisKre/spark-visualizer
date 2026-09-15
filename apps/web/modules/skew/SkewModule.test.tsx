@@ -124,4 +124,30 @@ describe('SkewModule', () => {
     expect(useAppStore.getState().knobs).toMatchObject({ a: 0, nulls: 0.03, salt: 1 });
     expect(screen.getByText(/the fix is a filter/)).toBeInTheDocument();
   });
+
+  it('renders a code pane with Diff, Config and EXPLAIN tabs', async () => {
+    const user = userEvent.setup();
+    render(<SkewModule />);
+
+    expect(screen.getByRole('tab', { name: 'Diff' })).toBeInTheDocument();
+    expect(screen.getByText(/orders\.join\(zones/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Config' }));
+    expect(screen.getByText(new RegExp(`saltFactor=${KNOB_DEFAULTS.salt}`))).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'EXPLAIN' }));
+    expect(screen.getByText(/none is available yet/i)).toBeInTheDocument();
+  });
+
+  it('the Config tab diffs before vs after once compare mode is on', async () => {
+    const user = userEvent.setup();
+    render(<SkewModule />);
+
+    await user.click(screen.getByRole('checkbox', { name: 'Compare before/after' }));
+    fireEvent.change(screen.getByRole('slider', { name: 'Salt factor' }), { target: { value: '8' } });
+    await user.click(screen.getByRole('tab', { name: 'Config' }));
+
+    expect(screen.getByText(/saltFactor=1/)).toBeInTheDocument();
+    expect(screen.getByText(/saltFactor=8/)).toBeInTheDocument();
+  });
 });
