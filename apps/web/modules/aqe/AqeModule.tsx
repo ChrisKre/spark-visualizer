@@ -1,13 +1,15 @@
 'use client';
 
-// SAS-060...064 (E7) — scaffold, knobs, the plan tree wired to a live run, the partition
-// strip, and the AQE off/on compare mode. Code pane lands in SAS-065.
-import { Scrubber } from '@sas/ui';
+// SAS-060...065 (E7) — scaffold, knobs, the plan tree wired to a live run, the partition
+// strip, the AQE off/on compare mode, and the code pane.
+import { CodePane, Scrubber } from '@sas/ui';
 import { Badge, MetricRibbon, PartitionStrip, PlanTree, TaskTimeline } from '@sas/viz';
 import { asSimMs, type RunResult } from '@sas/sim';
 import { useEffect, useId, type JSX } from 'react';
 import { ClockDriver } from '../../store/ClockDriver';
-import { useAppActions, useClock, useCompare } from '../../store/useAppStore';
+import { useAppActions, useClock, useCompare, useKnobs } from '../../store/useAppStore';
+import { buildRunConfig } from './buildRunConfig';
+import { buildConfigText, buildPlanDiffText, EXPLAIN_PLACEHOLDER } from './codeContent';
 import { SETUP, TITLE } from './copy';
 import { KnobPanel } from './KnobPanel';
 import { KNOB_DEFAULTS } from './knobs';
@@ -44,6 +46,7 @@ export function AqeModule(): JSX.Element {
   const { setModule, play, pause, setSpeed, step, setT, setCompare } = useAppActions();
   const clock = useClock();
   const compare = useCompare();
+  const knobs = useKnobs();
   const compareToggleId = useId();
 
   useEffect(() => {
@@ -53,6 +56,11 @@ export function AqeModule(): JSX.Element {
   const { after, before } = useAqeRun();
   const domainMs: [number, number] = [0, Math.max(1, clock.duration)];
   const stage0Bytes = after.stages[0]?.partitionBytes ?? [];
+
+  // Cheap, pure re-derivation (no simulate() call) — useAqeRun already computed the RunResult
+  // side of this; the CodePane's Config tab just needs the RunConfig itself.
+  const configText = buildConfigText(buildRunConfig(knobs), before ? buildRunConfig({ ...knobs, aqe: 0 }) : undefined);
+  const diffText = buildPlanDiffText(after.plan.initial, after.plan.final);
 
   return (
     <article>
@@ -121,6 +129,8 @@ export function AqeModule(): JSX.Element {
           <MetricRibbon mode="single" values={toMetricValues(after)} metrics={AQE_METRICS} />
         </>
       )}
+
+      <CodePane diff={diffText} config={configText} explain={EXPLAIN_PLACEHOLDER} />
     </article>
   );
 }

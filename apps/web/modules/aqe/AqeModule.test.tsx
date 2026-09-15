@@ -148,4 +148,29 @@ describe('AqeModule', () => {
     const on = simulate(buildRunConfig({ ...KNOB_DEFAULTS, skf: 2 }), 42).metrics.wallClockMs;
     expect(useAppStore.getState().clock.duration).toBe(Math.max(off, on));
   });
+
+  it('renders a code pane with Diff, Config and EXPLAIN tabs', async () => {
+    const user = userEvent.setup();
+    render(<AqeModule />);
+
+    expect(screen.getByRole('tab', { name: 'Diff' })).toBeInTheDocument();
+    expect(screen.getByText(/Initial physical plan/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Config' }));
+    expect(screen.getByText(/spark\.conf\.set\("spark\.sql\.adaptive\.enabled"/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'EXPLAIN' }));
+    expect(screen.getByText(/none is available yet/i)).toBeInTheDocument();
+  });
+
+  it('the Config tab diffs AQE off vs on once compare mode is on', async () => {
+    const user = userEvent.setup();
+    render(<AqeModule />);
+
+    await user.click(screen.getByRole('checkbox', { name: 'Compare AQE off/on' }));
+    await user.click(screen.getByRole('tab', { name: 'Config' }));
+
+    expect(screen.getByText(/spark\.sql\.adaptive\.enabled", "false"/)).toBeInTheDocument();
+    expect(screen.getByText(/spark\.sql\.adaptive\.enabled", "true"/)).toBeInTheDocument();
+  });
 });
