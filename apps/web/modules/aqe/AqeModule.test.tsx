@@ -63,4 +63,10 @@ describe('AqeModule', () => {
 
     expect(screen.getAllByText(/AQE: coalesce shuffle partitions/).length).toBeGreaterThan(0);
   });
+
+  it('renders a partition strip showing 200 partitions merging down under the default coalesce', () => {
+    render(<AqeModule />);
+    expect(screen.getByText('Before (200)')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /Partition strip/ })).toBeInTheDocument();
+  });
 });
