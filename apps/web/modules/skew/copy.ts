@@ -19,3 +19,10 @@ export const NULL_TRAP_EXPLANATION =
   'Even a perfectly uniform key produces a brutal straggler here, because every null value ' +
   'hashes to the same partition. Salting barely moves the number — the fix is a filter: ' +
   'drop or bucket the null rows before the join.';
+
+// SAS-076 (E8) — docs/APP_STATE.md §5: "Fixture fetch fails → fall back to the model, badge
+// flips to MODELED, a quiet notice explains why." Shown only when useSkewRun's
+// `fixturesUnavailable` is true (the manifest request itself failed), never for the ordinary
+// case of the manifest loading fine with no non-synthetic fixtures yet.
+export const FIXTURE_FETCH_NOTICE =
+  "Couldn't reach the measured-fixture data — showing the modeled result instead.";

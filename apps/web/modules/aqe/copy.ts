@@ -15,3 +15,7 @@ export const TAKEAWAY =
   'AQE does not make Spark smarter at planning time. It makes Spark willing to change its ' +
   'mind once a stage has actually run and the real sizes are known. Every one of its three ' +
   'tricks is a reaction to a statistic the planner could not have had.';
+
+// SAS-076 (E8) — see skew/copy.ts's identical constant for the full rationale.
+export const FIXTURE_FETCH_NOTICE =
+  "Couldn't reach the measured-fixture data — showing the modeled result instead.";

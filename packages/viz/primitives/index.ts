@@ -11,3 +11,5 @@ export { DEFAULT_METRICS, TASK_COUNT_METRIC } from './metricDefs';
 export type { MetricDef, MetricKey } from './metricDefs';
 export { MetricRibbon } from './MetricRibbon';
 export type { MetricRibbonProps, MetricRibbonSingleProps, MetricRibbonCompareProps, MetricValues } from './MetricRibbon';
+export { RunWarnings } from './RunWarnings';
+export type { RunWarningsProps, RunWarning, RunWarningCode } from './RunWarnings';
