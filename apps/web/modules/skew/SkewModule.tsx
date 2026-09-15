@@ -11,10 +11,11 @@ import { useEffect, useId, type JSX } from 'react';
 import { ClockDriver } from '../../store/ClockDriver';
 import { useAppActions, useClock, useCompare, useKnobs } from '../../store/useAppStore';
 import { useUrlSync } from '../../store/urlSync';
-import { SETUP, TITLE } from './copy';
+import { NULL_TRAP_EXPLANATION, NULL_TRAP_PRESET_LABEL, SETUP, TITLE } from './copy';
 import { pickHistogramStage } from './histogramStage';
 import { KnobPanel } from './KnobPanel';
 import { defaultFor, KNOB_DEFAULTS } from './knobs';
+import { isNullTrapActive, NULL_TRAP_PRESET_KNOBS } from './nullTrapPreset';
 import { toMetricValues } from './toMetricValues';
 import { toTimelineTasks } from './toTimelineTasks';
 import { useSkewRun } from './useSkewRun';
@@ -33,7 +34,7 @@ function TimelinePane({ label, run, currentMs, domainMs }: { label?: string; run
 }
 
 export function SkewModule() {
-  const { setModule, play, pause, setSpeed, step, setT, setCompare } = useAppActions();
+  const { setModule, play, pause, setSpeed, step, setT, setCompare, setKnobs } = useAppActions();
   const clock = useClock();
   const knobs = useKnobs();
   const compare = useCompare();
@@ -58,6 +59,13 @@ export function SkewModule() {
       <h1>{TITLE}</h1>
       <p className={styles.setup}>{SETUP}</p>
       <KnobPanel />
+
+      <div className={styles.presets}>
+        <button type="button" className={styles.presetButton} onClick={() => setKnobs({ ...knobs, ...NULL_TRAP_PRESET_KNOBS })}>
+          {NULL_TRAP_PRESET_LABEL}
+        </button>
+      </div>
+      {isNullTrapActive(knobs) ? <p className={styles.nullTrapCallout}>{NULL_TRAP_EXPLANATION}</p> : null}
 
       <div className={styles.runHeader}>
         <label className={styles.compareToggle} htmlFor={compareToggleId}>

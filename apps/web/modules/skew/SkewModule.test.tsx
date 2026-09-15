@@ -112,4 +112,16 @@ describe('SkewModule', () => {
     expect(expectedBefore).toBeGreaterThan(expectedAfter);
     expect(useAppStore.getState().clock.duration).toBe(expectedBefore);
   });
+
+  it('the null-trap preset is reachable in one click and shows the filter-not-salt explanation', async () => {
+    const user = userEvent.setup();
+    render(<SkewModule />);
+
+    expect(screen.queryByText(/the fix is a filter/)).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Try: 3% null keys' }));
+
+    expect(useAppStore.getState().knobs).toMatchObject({ a: 0, nulls: 0.03, salt: 1 });
+    expect(screen.getByText(/the fix is a filter/)).toBeInTheDocument();
+  });
 });
