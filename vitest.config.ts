@@ -1,6 +1,12 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  // Vite/esbuild otherwise derives the JSX transform from each file's nearest tsconfig.json.
+  // packages/ui and packages/viz set "jsx": "react-jsx" so their .test.tsx files work with no
+  // React import in scope, but apps/web's tsconfig.json sets "jsx": "preserve" (Next compiles
+  // JSX itself at build time) — without this override, apps/web component tests fail at run
+  // time with "React is not defined" the moment they render anything (SAS-070, the first one).
+  esbuild: { jsx: 'automatic' },
   test: {
     environment: 'node',
     // tools/**/*.test.ts covers tools/generator's skew.test.ts and SAS-032's parity.test.ts
