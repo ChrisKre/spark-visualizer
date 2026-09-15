@@ -5,5 +5,6 @@ export * from './format';
 export * from './useReducedMotion';
 export * from './ThemeToggle';
 export * from './Scrubber';
+export * from './Knob';
 
 export const UI_PACKAGE_READY = true as const;
