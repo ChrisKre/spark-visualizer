@@ -12,7 +12,7 @@ vi.mock('next/navigation', () => ({
 describe('/m/[moduleId]', () => {
   it('generateStaticParams lists exactly the registered modules', async () => {
     const { generateStaticParams } = await import('./page');
-    expect(generateStaticParams()).toEqual([{ moduleId: 'skew' }]);
+    expect(generateStaticParams()).toEqual([{ moduleId: 'skew' }, { moduleId: 'aqe' }]);
   });
 
   it('generateMetadata resolves the module title/summary, and {} for an unknown id', async () => {
