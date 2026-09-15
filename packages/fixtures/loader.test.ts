@@ -2,7 +2,8 @@
 // output — see SAS-023/024). Regenerate with `pnpm --filter @sas/fixtures run generate:synthetic`
 // if these fail after a schema change.
 import { describe, expect, it } from 'vitest';
-import { listFixtureIds, loadFixture, toRunResult } from './loader';
+import { listFixtureIds, loadFixture } from './loader';
+import { toRunResult } from './toRunResult';
 
 const EXPECTED_IDS = [
   'm1_a00_s1',
