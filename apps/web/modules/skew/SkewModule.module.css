@@ -2,3 +2,11 @@
   max-width: 60ch;
   color: var(--muted);
 }
+
+.runHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 1.5rem 0 1rem;
+}
